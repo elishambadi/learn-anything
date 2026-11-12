@@ -1,0 +1,33 @@
+$kind: http-request
+name: Submit attempt
+method: POST
+url: '{{baseUrl}}/api/lessons/{{lessonId}}/attempts'
+order: 6000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: '{{responses}}'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('201 Created', () => pm.response.to.have.status(201));
+      const body = pm.response.json();
+      pm.test('score is bounded by total', () => {
+        pm.expect(body.score).to.be.a('number');
+        pm.expect(body.total).to.be.a('number');
+        pm.expect(body.score).to.be.at.most(body.total);
+      });
+      pm.test('answers and explanations are returned only after submission', () => {
+        body.results.forEach((result) => {
+          pm.expect(result).to.have.property('correctAnswer');
+          pm.expect(result).to.have.property('explanation');
+          pm.expect(result).to.have.property('isCorrect');
+        });
+      });
+      pm.test('submission response is graded server-side', () => {
+        pm.expect(body.results.every((result) => typeof result.isCorrect === 'boolean')).to.be.true;
+      });
+examples: './.resources/submit-attempt.resources/examples'

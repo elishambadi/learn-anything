@@ -1,0 +1,33 @@
+$kind: http-request
+name: Get lesson (no answers)
+method: GET
+url: '{{baseUrl}}/api/lessons/{{lessonId}}'
+order: 5000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200 OK', () => pm.response.to.have.status(200));
+      const body = pm.response.json();
+      const raw = pm.response.text();
+      pm.test('read payload never contains answers or explanations', () => {
+        pm.expect(raw).to.not.include('answer_json');
+        pm.expect(raw).to.not.include('answerJson');
+        pm.expect(raw).to.not.include('"explanation"');
+      });
+      pm.test('questions are public shapes', () => {
+        body.questions.forEach((question) => {
+          pm.expect(question).to.have.all.keys(
+            'id', 'position', 'type', 'prompt', 'options', 'difficulty', 'placement'
+          );
+        });
+      });
+      const responses = {};
+      body.questions.forEach((question) => {
+        if (question.type === 'true_false') responses[question.id] = true;
+        else if (question.type === 'radio') responses[question.id] = question.options[0].id;
+        else if (question.type === 'multi') responses[question.id] = [question.options[0].id];
+        else responses[question.id] = question.options.map((option) => option.id);
+      });
+      pm.collectionVariables.set('responses', JSON.stringify({ responses }));
+examples: './.resources/get-lesson.resources/examples'

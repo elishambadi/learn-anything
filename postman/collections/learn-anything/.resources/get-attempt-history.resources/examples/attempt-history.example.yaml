@@ -1,0 +1,26 @@
+$kind: http-example
+name: Attempt history
+request:
+  url: '{{baseUrl}}/api/topics/{{topicId}}/attempts'
+  method: GET
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    - key: Content-Type
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "attempts": [
+          {
+            "id": "c3d4e5f6-a7b8-4c9d-8e0f-1a2b3c4d5e6f",
+            "lessonId": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+            "lessonTitle": "Capturing light",
+            "score": 4,
+            "total": 4,
+            "submittedAt": "2026-11-11T09:12:00.000Z"
+          }
+        ]
+      }

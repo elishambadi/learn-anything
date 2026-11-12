@@ -1,0 +1,20 @@
+$kind: http-request
+name: List courses
+method: GET
+url: '{{baseUrl}}/api/topics'
+order: 2000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200 OK', () => pm.response.to.have.status(200));
+      const body = pm.response.json();
+      pm.test('returns a topics array', () => pm.expect(body.topics).to.be.an('array'));
+      body.topics.forEach((topic) => {
+        pm.expect(topic).to.have.keys([
+          'id', 'prompt', 'mode', 'status', 'analysisJson', 'error',
+          'heartbeatAt', 'createdAt', 'updatedAt', 'lessonCount',
+          'readyCount', 'attemptCount', 'bestScore', 'scoreTotal'
+        ]);
+      });
+examples: './.resources/list-courses.resources/examples'

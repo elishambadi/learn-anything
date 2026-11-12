@@ -1,0 +1,26 @@
+[
+  {
+    "id": "events",
+    "title": "Events, not requests",
+    "description": "An event records that something happened, and the publisher does not know who consumes it.",
+    "icon": "workflow"
+  },
+  {
+    "id": "consumers",
+    "title": "Independent consumers",
+    "description": "Each consumer handles the event on its own schedule, so one slow consumer cannot block the publisher.",
+    "icon": "layers"
+  },
+  {
+    "id": "background-work",
+    "title": "Background work",
+    "description": "The request returns once the event is stored, and workers do the slow work later.",
+    "icon": "clock"
+  },
+  {
+    "id": "trade-offs",
+    "title": "Eventual consistency",
+    "description": "Events trade immediate consistency for independent retries, so the UI shows processing states and consumers stay idempotent.",
+    "icon": "target"
+  }
+]

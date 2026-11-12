@@ -1,0 +1,56 @@
+<div class="card_cardContainer__27V83 "><span style="width: 100%;"><div class="card-title_cardContainer__V_k3b"><p class="MuiTypography-root MuiTypography-body1 css-abvhp3">PubSub and Event Distribution</p><div class="MuiBox-root css-tr7fpl"></div></div></span><div class="card_defaultThemeCardContentContainer__LI3Qn card_ltr__Lh05V"><div class="htmlText htmlCourse"><div><div class="simple-box-wrapper">
+  <div class="simple-box">
+    <div class="column">
+      <div class="img-wrapper"><img src="https://cdn.minicoursegenerator.com/production/images/elisha639299141560794038/ai_bfd1413b-ad6a-4b7e-873e-f40afa9227ee.jpg" class="zoom-enabled" style="cursor: zoom-in;"></div>
+    </div>
+  </div>
+</div>
+
+<div class="simple-box-wrapper">
+<div class="simple-box">
+<div class="column">
+<h2>Decoupling with Publish-Subscribe</h2><p>Up to this point, we have discussed direct process messaging: Process A sends an event directly to Process B's mailbox using its specific Process ID (PID).</p>
+<p>While direct messaging is fast and efficient, it creates tight coupling. The event producer must know exactly who the consumers are and how to reach them. If we add a new feature that also needs to react to that event, we have to rewrite the producer's code to send a message to the new handler.</p>
+<p>To achieve true loose coupling in event-driven systems, we use the <strong>Publish-Subscribe (PubSub)</strong> pattern.</p>
+</div>
+</div>
+</div><div class="simple-box-wrapper">
+<div class="simple-box">
+<div class="column">
+<h3>How PubSub Works</h3><p>In a PubSub system, communication is routed through "topics" (named channels) rather than direct addresses.</p><div class="card-wrapper">
+<div class="card-box" type="numberedCard">
+<div class="card-header"><p>01</p></div>
+<div class="card-content">
+<p><strong>Subscribe</strong></p>
+<p>Interested processes (consumers) tell the PubSub system, "I want to receive all events published to the topic named 'orders'."</p>
+</div>
+</div><div class="card-box" type="numberedCard">
+<div class="card-header"><p>02</p></div>
+<div class="card-content">
+<p><strong>Publish</strong></p>
+<p>An event producer simply tells the PubSub system, "Here is a new `order_placed` event. Broadcast it to the 'orders' topic."</p>
+</div>
+</div><div class="card-box" type="numberedCard">
+<div class="card-header"><p>03</p></div>
+<div class="card-content">
+<p><strong>Distribute</strong></p>
+<p>The PubSub system automatically copies and delivers the event to the mailboxes of every process currently subscribed to that topic.</p>
+</div>
+</div>
+</div><p>By using PubSub, the producer has zero knowledge of the consumers. It just shouts into the void, and the PubSub system ensures anyone listening gets the message. You can add or remove subscribers dynamically without ever touching the producer's code.</p>
+</div>
+</div>
+</div><div class="simple-box-wrapper">
+<div class="simple-box">
+<div class="column">
+<h3>Phoenix.PubSub in Practice</h3><p>In the Elixir ecosystem, <strong>Phoenix.PubSub</strong> is the standard library for this pattern. It is incredibly fast, distributed out-of-the-box (meaning it works across multiple servers), and integrates seamlessly with standard Elixir processes.</p><table>
+<tbody><tr><th>Scenario</th><th>Direct Messaging</th><th>Phoenix.PubSub</th></tr>
+<tr><td><strong>Target</strong></td><td>A single, specific PID</td><td>A string-based Topic (e.g., `"chat:room:42"`)</td></tr>
+<tr><td><strong>Use Case</strong></td><td>A supervisor talking to its worker</td><td>Broadcasting data to many unknown listeners</td></tr>
+<tr><td><strong>Coupling</strong></td><td>High (Sender knows Receiver)</td><td>Low (Sender only knows the Topic)</td></tr>
+</tbody></table><p><strong>Practical Use Case:</strong></p>
+<p>Imagine a real-time chat application. When a user sends a message, the web request doesn't loop through thousands of connected users to send them the message directly. Instead, it publishes a `new_message` event to the `"chat:room_1"` topic via Phoenix.PubSub.</p>
+<p>Every connected user's web socket is backed by a lightweight Elixir process that has subscribed to that topic. Phoenix.PubSub instantly delivers the message to all of their mailboxes, and their individual processes push the update to their screens. This allows the system to scale to millions of concurrent users effortlessly.</p>
+</div>
+</div>
+</div></div></div><div class="links_links__Sf4bR"></div> </div></div><div class="theme_defaultThemeButtonHolder__WNHWY navigator_navigator__VTUZ1" data-continue-button="true" style="display: flex;"><div class="MuiStack-root css-jj2ztu" style="width: 100%;"><button class="MuiButtonBase-root MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeMedium MuiButton-containedSizeMedium MuiButton-colorPrimary MuiButton-fullWidth MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeMedium MuiButton-containedSizeMedium MuiButton-colorPrimary MuiButton-fullWidth css-sb3gt9" tabindex="0" type="button"><span style="z-index: 1;">Continue</span><span class="MuiTouchRipple-root css-w0pj6f"></span></button></div></div>

@@ -1,0 +1,16 @@
+node_modules
+.next
+.git
+.gitignore
+data
+.env
+.env.local
+.env.*.local
+postman
+tests
+scripts
+*.md
+sample-article.odt
+tsconfig.tsbuildinfo
+.DS_Store
+coverage

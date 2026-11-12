@@ -1,0 +1,159 @@
+$kind: http-example
+name: Public lesson
+request:
+  url: '{{baseUrl}}/api/lessons/{{lessonId}}'
+  method: GET
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    - key: Content-Type
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+        "topicId": "0f5b7c1e-8a2d-4f5e-9b1a-3c6d7e8f9a0b",
+        "subtopicId": null,
+        "position": 0,
+        "title": "Events and independent consumers",
+        "objectives": [
+          "Explain what an event records",
+          "Describe how consumers subscribe independently"
+        ],
+        "hasSequence": true,
+        "promise": "See how an event lets one service hand work to independent consumers without making the user wait.",
+        "heroQuery": "server room network",
+        "coreConcepts": [
+          {
+            "id": "events",
+            "title": "Events, not requests",
+            "description": "An event records that something happened. Publishers do not know who consumes it.",
+            "icon": "workflow"
+          },
+          {
+            "id": "consumers",
+            "title": "Independent consumers",
+            "description": "Each subscriber handles the event on its own schedule, so one slow consumer cannot block the publisher.",
+            "icon": "layers"
+          },
+          {
+            "id": "background-work",
+            "title": "Background execution",
+            "description": "The request returns as soon as the event is stored. Workers do the slow work later.",
+            "icon": "clock"
+          }
+        ],
+        "courseConcepts": [
+          {
+            "id": "events",
+            "title": "Events, not requests",
+            "description": "An event records that something happened, and the publisher does not know who consumes it.",
+            "icon": "workflow"
+          },
+          {
+            "id": "consumers",
+            "title": "Independent consumers",
+            "description": "Each consumer handles the event on its own schedule, so one slow consumer cannot block the publisher.",
+            "icon": "layers"
+          },
+          {
+            "id": "background-work",
+            "title": "Background work",
+            "description": "The request returns once the event is stored, and workers do the slow work later.",
+            "icon": "clock"
+          },
+          {
+            "id": "trade-offs",
+            "title": "Eventual consistency",
+            "description": "Events trade immediate consistency for independent retries, so the UI shows processing states and consumers stay idempotent.",
+            "icon": "target"
+          }
+        ],
+        "sections": [
+          {
+            "heading": "Synchronous versus event-driven",
+            "body_markdown": "Direct calls are simple, but they couple the caller to every dependency. An event flips that: the app records what happened, returns, and consumers work later.",
+            "visual": {
+              "kind": "table",
+              "columns": ["Aspect", "Synchronous", "Event-driven"],
+              "rows": [
+                ["User waits", "Until every step finishes", "Only until the event is stored"],
+                ["Failure scope", "One slow API fails the request", "Consumers retry independently"]
+              ]
+            }
+          },
+          {
+            "heading": "The registration flow",
+            "body_markdown": "The app saves the user and publishes an event. Workers send the welcome message and create the marketing profile after the request returns.",
+            "visual": {
+              "kind": "steps",
+              "items": [
+                { "title": "Accept the request", "text": "The form is saved and the request returns immediately." },
+                { "title": "Publish the event", "text": "The user_registered event carries the new user id." },
+                { "title": "Work in the background", "text": "Subscribed workers pick up the event and retry on failure." }
+              ]
+            }
+          }
+        ],
+        "closing": {
+          "kind": "boundary",
+          "heading": "When NOT to use events",
+          "body_markdown": "If you queue a bank balance check, the user waits for a worker that may be busy. Keep short workflows synchronous when the answer must be correct before the next step."
+        },
+        "comparison": null,
+        "realWorld": {
+          "title": "PubSub in a chat application",
+          "description": "A chat server publishes each new message to a room topic. Every connected socket process subscribes and pushes the message to its own client.",
+          "link": {
+            "label": "Phoenix PubSub documentation",
+            "url": "https://hexdocs.pm/phoenix_pubsub/Phoenix.PubSub.html"
+          },
+          "code": {
+            "language": "elixir",
+            "code": "Phoenix.PubSub.broadcast(MyApp.PubSub, \"room:42\", {:new_message, message})"
+          },
+          "try_this": "Pick a flow in an app you use. List which steps could move behind an event."
+        },
+        "contentMarkdown": "## Start with a synchronous flow\n\nA new user submits a registration form. The app saves the account, calls an email API, calls a CRM API, and only then returns success.\n\n## Publish an event instead\n\nThe event-driven version saves the account and publishes a `user_registered` event. The request returns immediately.",
+        "status": "ready",
+        "questions": [
+          {
+            "id": "q1",
+            "position": 0,
+            "type": "radio",
+            "prompt": "What does a publisher know about its consumers?",
+            "options": [
+              { "id": "a", "text": "Publishers do not know who consumes the event" },
+              { "id": "b", "text": "Every consumer registers its address" },
+              { "id": "c", "text": "The publisher calls each consumer" },
+              { "id": "d", "text": "The publisher waits for replies" }
+            ],
+            "difficulty": "easy",
+            "placement": "inline"
+          },
+          {
+            "id": "q2",
+            "position": 1,
+            "type": "true_false",
+            "prompt": "An event-driven request can return before the welcome email is sent.",
+            "options": [
+              { "id": "true", "text": "True" },
+              { "id": "false", "text": "False" }
+            ],
+            "difficulty": "easy",
+            "placement": "final"
+          }
+        ],
+        "topic": {
+          "id": "0f5b7c1e-8a2d-4f5e-9b1a-3c6d7e8f9a0b",
+          "prompt": "Event-Driven Architecture",
+          "mode": "normal"
+        },
+        "nextLesson": {
+          "id": "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+          "title": "Choosing a delivery mechanism"
+        },
+        "attemptSummary": null
+      }

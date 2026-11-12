@@ -1,0 +1,25 @@
+$kind: http-request
+name: Get course
+method: GET
+url: '{{baseUrl}}/api/topics/{{topicId}}'
+order: 3000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200 OK', () => pm.response.to.have.status(200));
+      const body = pm.response.json();
+      pm.test('has topic, subtopics, lessons', () => {
+        pm.expect(body.topic).to.be.an('object');
+        pm.expect(body.subtopics).to.be.an('array');
+        pm.expect(body.lessons).to.be.an('array');
+      });
+      const ready = body.lessons.find((lesson) => lesson.status === 'ready');
+      if (ready) pm.collectionVariables.set('lessonId', ready.id);
+      pm.test('lesson stubs never expose content or answers', () => {
+        body.lessons.forEach((lesson) => {
+          pm.expect(lesson).to.not.have.property('answerJson');
+          pm.expect(lesson).to.not.have.property('questions');
+        });
+      });
+examples: './.resources/get-course.resources/examples'

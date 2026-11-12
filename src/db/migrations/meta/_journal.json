@@ -1,0 +1,34 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1794319000882,
+      "tag": "0000_natural_umar",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1794401971831,
+      "tag": "0001_uneven_yellow_claw",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1794404220313,
+      "tag": "0002_wild_vision",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1794471844359,
+      "tag": "0003_flimsy_amphibian",
+      "breakpoints": true
+    }
+  ]
+}

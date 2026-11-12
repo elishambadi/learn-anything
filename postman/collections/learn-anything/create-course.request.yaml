@@ -1,0 +1,25 @@
+$kind: http-request
+name: Create course
+method: POST
+url: '{{baseUrl}}/api/topics'
+order: 1000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "prompt": "Photosynthesis",
+      "mode": "normal"
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('201 Created', () => pm.response.to.have.status(201));
+      const body = pm.response.json();
+      pm.test('returns a topic id', () => pm.expect(body.id).to.be.a('string').and.not.empty);
+      pm.collectionVariables.set('topicId', body.id);
+      pm.collectionVariables.set('lessonId', '');
+examples: './.resources/create-course.resources/examples'

@@ -1,0 +1,15 @@
+$kind: http-request
+name: Resume course
+description: >
+  Resumes only unfinished stages and failed lessons. Safe to call repeatedly;
+  ready lessons are never regenerated. Costs model tokens for any missing work.
+method: POST
+url: '{{baseUrl}}/api/topics/{{topicId}}/retry'
+order: 8000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('202-style success', () => pm.response.to.have.status(200));
+      const body = pm.response.json();
+      pm.test('returns a status', () => pm.expect(body.status).to.be.a('string'));

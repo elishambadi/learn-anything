@@ -1,0 +1,85 @@
+<div class="card_cardContainer__27V83 "><span style="width: 100%;"><div class="card-title_cardContainer__V_k3b"><p class="MuiTypography-root MuiTypography-body1 css-abvhp3">GenServer as a Stateful Event Handler</p><div class="MuiBox-root css-tr7fpl"></div></div></span><div class="card_defaultThemeCardContentContainer__LI3Qn card_ltr__Lh05V"><div class="htmlText htmlCourse"><div><div class="simple-box-wrapper">
+  <div class="simple-box">
+    <div class="column">
+      <div class="img-wrapper"><img src="https://cdn.minicoursegenerator.com/production/images/elisha639299141560794038/ai_00ad6449-8f91-4c7d-aad6-7194cf3bf900.jpg" class="zoom-enabled" style="cursor: zoom-in;"></div>
+    </div>
+  </div>
+</div>
+
+<div class="simple-box-wrapper">
+    <div class="simple-box">
+        <div class="column">
+            <h2>Introducing the GenServer</h2><p>When building event-driven systems, event handlers often need to remember things. A shopping cart handler needs to remember the items added; a rate-limiter needs to remember how many requests a user made recently.</p>
+            <p>In Elixir, the standard way to build a long-running process that holds state and reacts to events is by using the <strong>GenServer</strong> (Generic Server) OTP behavior. A GenServer abstracts away the raw `receive` loop and recursion we built earlier, providing a clean, standardized interface for handling messages and maintaining state.</p>
+        </div>
+    </div>
+</div><div class="simple-box-wrapper">
+    <div class="simple-box">
+        <div class="column">
+            <h3>Calls, Casts, and Info</h3><p>A GenServer categorizes incoming messages (events) into three distinct types, each with its own callback function. Understanding the difference between them is critical for designing efficient handlers.</p><div class="tab-container" data-active-tab="1" data-type="horizontal">
+                <div class="tab-headers-scroll-wrapper"><button class="tab-scroll-btn tab-scroll-left" type="button" style="display: none;"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></button><div class="tab-headers" type="horizontal">
+                    <button class="tab-header active" data-background-color="#002e47" data-text-color="#002e47" data-tab-index="1" data-tab-title="Call (Synchronous)" data-is-active="true">
+                        <h3 style="color: rgb(0, 46, 71);">Call (Synchronous)</h3>
+                    </button>
+                    <button class="tab-header " data-background-color="#002e47" data-text-color="#002e47" data-tab-index="2" data-tab-title="Cast (Asynchronous)" data-is-active="false">
+                        <h3 style="color: rgb(0, 46, 71);">Cast (Asynchronous)</h3>
+                    </button>
+                    <button class="tab-header " data-background-color="#002e47" data-text-color="#002e47" data-tab-index="3" data-tab-title="Info (Raw Messages)" data-is-active="false">
+                        <h3 style="color: rgb(0, 46, 71);">Info (Raw Messages)</h3>
+                    </button>
+                </div><button class="tab-scroll-btn tab-scroll-right" type="button" style="display: flex;"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4L10 8L6 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></button></div>
+                <div class="tab-contents">
+                    <div class="tab-content active" data-tab-index="1" data-is-active="true">
+                        <div class="simple-box-wrapper">
+                            <div class="simple-box">
+                                <div class="column">
+                                    <p><strong>`handle_call/3`</strong></p>
+                                    <p>Use a `call` when the sender needs a reply and is willing to wait (block) for it.</p>
+                                    <p><em>Example:</em> A web request asks the Shopping Cart GenServer for the current total. The web request must wait for the GenServer to calculate and return the total before rendering the page.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div><div class="tab-content " data-tab-index="2" data-is-active="false">
+                        <div class="simple-box-wrapper">
+                            <div class="simple-box">
+                                <div class="column">
+                                    <p><strong>`handle_cast/2`</strong></p>
+                                    <p>Use a `cast` when the sender is just firing off an event and does not expect a reply.</p>
+                                    <p><em>Example:</em> A user clicks "Add to Cart". The web request sends a `cast` to the GenServer to add the item and immediately confirms to the user, without waiting for the GenServer to finish processing.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div><div class="tab-content " data-tab-index="3" data-is-active="false">
+                        <div class="simple-box-wrapper">
+                            <div class="simple-box">
+                                <div class="column">
+                                    <p><strong>`handle_info/2`</strong></p>
+                                    <p>Use `info` to handle raw Elixir messages sent via `send/2`, or system messages like timeouts and process monitoring.</p>
+                                    <p><em>Example:</em> A timer goes off, sending a raw message to the GenServer to clear the cart if it has been inactive for 30 minutes.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div><div class="simple-box-wrapper">
+    <div class="simple-box">
+        <div class="column">
+            <h3>State Updates in Action</h3><p>Let's trace how a GenServer updates its internal state when it receives an asynchronous event (`cast`).</p><pre data-language="elixir" spellcheck="false"><code class="language-elixir">defmodule CounterHandler do
+              use GenServer
+
+              # The callback triggered by a cast event
+              def handle_cast({:increment, amount}, current_state) do
+                # 1. Calculate the new state based on the event
+                new_state = current_state + amount
+    
+                # 2. Return a tuple telling OTP to continue with the new state
+                {:noreply, new_state}
+              end
+            end</code></pre><p>When an `{:increment, 5}` event arrives, OTP automatically extracts the message from the mailbox and passes it to `handle_cast`, along with the `current_state` (let's say it's `10`).</p>
+            <p>The function calculates the `new_state` (`15`) and returns `{:noreply, 15}`. OTP takes that `15`, holds onto it, and passes it back into the callback the <em>next</em> time an event arrives. You never write a recursive loop; OTP handles the state transition seamlessly.</p>
+        </div>
+    </div>
+</div></div></div><div class="links_links__Sf4bR"></div> </div></div><div class="theme_defaultThemeButtonHolder__WNHWY navigator_navigator__VTUZ1" data-continue-button="true" style="display: flex;"><div class="MuiStack-root css-jj2ztu" style="width: 100%;"><button class="MuiButtonBase-root MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeMedium MuiButton-containedSizeMedium MuiButton-colorPrimary MuiButton-fullWidth MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeMedium MuiButton-containedSizeMedium MuiButton-colorPrimary MuiButton-fullWidth css-sb3gt9" tabindex="0" type="button"><span style="z-index: 1;">Continue</span><span class="MuiTouchRipple-root css-w0pj6f"></span></button></div></div>

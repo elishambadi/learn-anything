@@ -1,0 +1,13 @@
+$kind: http-request
+name: Delete course
+description: Deletes the course, its lessons, questions, and attempts.
+method: DELETE
+url: '{{baseUrl}}/api/topics/{{topicId}}'
+order: 9000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200 OK', () => pm.response.to.have.status(200));
+      pm.collectionVariables.set('topicId', '');
+      pm.collectionVariables.set('lessonId', '');

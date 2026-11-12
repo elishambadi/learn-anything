@@ -1,0 +1,132 @@
+{
+  "promise": "See how an event lets one service hand work to independent consumers without making the user wait.",
+  "hero_image_query": "server room network",
+  "focus_concept_ids": [
+    "events",
+    "consumers"
+  ],
+  "sections": [
+    {
+      "heading": "Synchronous versus event-driven",
+      "body_markdown": "Direct calls are simple, but they couple the caller to every dependency. The caller waits while each API runs, and one slow API can fail the whole request. An event flips that: the app records what happened, returns, and consumers work later. Publishers do not know who consumes the event, so one slow consumer cannot block the publisher.",
+      "visual": {
+        "kind": "table",
+        "columns": [
+          "Aspect",
+          "Synchronous",
+          "Event-driven"
+        ],
+        "rows": [
+          [
+            "User waits",
+            "Until every step finishes",
+            "Only until the event is stored"
+          ],
+          [
+            "Coupling",
+            "Caller knows every service",
+            "Publisher knows no consumers"
+          ],
+          [
+            "Failure scope",
+            "One slow API fails the request",
+            "Consumers retry independently"
+          ]
+        ]
+      }
+    },
+    {
+      "heading": "The registration flow",
+      "body_markdown": "A new user submits the registration form. The app saves the user and publishes an event. An email worker sends the welcome message, then a CRM worker creates the marketing profile. The request returns before either worker finishes. Consumers can retry independently.",
+      "visual": {
+        "kind": "steps",
+        "items": [
+          {
+            "title": "Accept the request",
+            "text": "The form is saved and the request returns immediately."
+          },
+          {
+            "title": "Publish the event",
+            "text": "The `user_registered` event carries the new user id."
+          },
+          {
+            "title": "Work in the background",
+            "text": "Subscribed workers pick up the event and retry on failure."
+          }
+        ]
+      }
+    },
+    {
+      "heading": "Choose the simplest tool",
+      "body_markdown": "A plain background task fits a quick one-off job. A stateful process fits work that needs shared state. A pub/sub topic fits one event with many unknown subscribers. Keep the user-facing path synchronous only where the answer is required.",
+      "visual": {
+        "kind": "roles",
+        "items": [
+          {
+            "title": "Background task",
+            "text": "Fits one quick job, such as sending a single email."
+          },
+          {
+            "title": "Pub/sub topic",
+            "text": "Fits one event with many unknown subscribers."
+          }
+        ]
+      }
+    }
+  ],
+  "assignment": "Map one synchronous flow in an app you use. List which steps could move behind an event and which must stay synchronous.",
+  "questions": [
+    {
+      "type": "radio",
+      "prompt": "What does a publisher know about its consumers?",
+      "options": [
+        "Publishers do not know who consumes the event",
+        "Every consumer must register its address with the publisher",
+        "The publisher calls each consumer one at a time",
+        "The publisher waits for every consumer to reply"
+      ],
+      "correct_index": 0,
+      "explanation": "Publishers do not know who consumes the event, so consumers can subscribe without changing the publisher.",
+      "difficulty": "easy",
+      "placement": "inline"
+    },
+    {
+      "type": "true_false",
+      "prompt": "An event-driven request can return before the welcome email is sent.",
+      "answer": true,
+      "explanation": "The request returns once the event is stored; the email worker handles the message later.",
+      "difficulty": "easy",
+      "placement": "final"
+    },
+    {
+      "type": "multi",
+      "prompt": "Which are benefits of event-driven registration?",
+      "options": [
+        "One slow consumer cannot block the publisher",
+        "Consumers can retry independently",
+        "The publisher must know every consumer",
+        "The request waits for every consumer to reply"
+      ],
+      "correct_indices": [
+        0,
+        1
+      ],
+      "explanation": "Independent consumers can fail or retry without holding up the publisher, and background work smooths out spikes.",
+      "difficulty": "medium",
+      "placement": "final"
+    },
+    {
+      "type": "order",
+      "prompt": "Put the event-driven registration steps in order.",
+      "items": [
+        "User submits the registration form",
+        "App saves the user and publishes an event",
+        "Email worker sends the welcome message",
+        "CRM worker creates the marketing profile"
+      ],
+      "explanation": "The app publishes after saving, and the independent workers consume the event afterward.",
+      "difficulty": "medium",
+      "placement": "final"
+    }
+  ]
+}

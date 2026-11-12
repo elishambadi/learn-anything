@@ -1,0 +1,56 @@
+<div class="card_cardContainer__27V83 "><span style="width: 100%;"><div class="card-title_cardContainer__V_k3b"><p class="MuiTypography-root MuiTypography-body1 css-abvhp3">Conceptual Architecture Walkthrough</p><div class="MuiBox-root css-tr7fpl"></div></div></span><div class="card_defaultThemeCardContentContainer__LI3Qn card_ltr__Lh05V"><div class="htmlText htmlCourse"><div><div class="simple-box-wrapper">
+  <div class="simple-box">
+    <div class="column">
+      <div class="img-wrapper"><img src="https://cdn.minicoursegenerator.com/production/images/elisha639299141560794038/ai_066de42b-19ea-41dc-897e-d36085415979.jpg" class="zoom-enabled" style="cursor: zoom-in;"></div>
+    </div>
+  </div>
+</div>
+
+<div class="simple-box-wrapper">
+    <div class="simple-box">
+        <div class="column">
+            <h2>Bringing It All Together</h2><p>Throughout this course, we have explored the foundational pieces of event-driven Elixir: lightweight processes, message passing, OTP behaviors like GenServer, supervision trees, and PubSub distribution.</p>
+            <p>To solidify these concepts, let's walk through a conceptual architecture of a real-world feature: a live inventory tracking system for a flash-sale website.</p>
+        </div>
+    </div>
+</div><div class="simple-box-wrapper">
+    <div class="simple-box">
+        <div class="column">
+            <h3>The Lifecycle of an Event</h3><p>Imagine a highly anticipated product drops, and thousands of users click "Buy" at the exact same time. Here is how our Elixir architecture handles the flow of events from source to notification.</p><div class="card-wrapper">
+                <div class="card-box" type="numberedCard">
+                    <div class="card-header"><p>01</p></div>
+                    <div class="card-content">
+                        <p><strong>The Event Source (Producer)</strong></p>
+                        <p>The web framework receives a checkout request. Instead of blocking to process the order, it immediately publishes a `checkout_requested` event to Phoenix.PubSub on the `"orders"` topic and returns a "Processing..." message to the user.</p>
+                    </div>
+                </div><div class="card-box" type="numberedCard">
+                    <div class="card-header"><p>02</p></div>
+                    <div class="card-content">
+                        <p><strong>State Management (GenServer)</strong></p>
+                        <p>An `InventoryManager` GenServer, which is subscribed to the `"orders"` topic, receives the event in its mailbox. It processes the event using a `handle_info` callback. It checks its internal state to ensure stock is available, decrements the stock count, and saves the new state.</p>
+                    </div>
+                </div><div class="card-box" type="numberedCard">
+                    <div class="card-header"><p>03</p></div>
+                    <div class="card-content">
+                        <p><strong>Event Distribution (Notification)</strong></p>
+                        <p>Upon successfully updating the state, the `InventoryManager` publishes a new event: `inventory_updated`. Thousands of lightweight processes, each managing a WebSocket connection for a user browsing the site, are subscribed to this topic. They receive the event and instantly push the new "Items Left" count to the users' screens.</p>
+                    </div>
+                </div><div class="card-box" type="numberedCard">
+                    <div class="card-header"><p>04</p></div>
+                    <div class="card-content">
+                        <p><strong>Recovery via Supervision</strong></p>
+                        <p>Suppose the database temporarily drops the connection while the `InventoryManager` is saving the state. The GenServer crashes. The Supervisor immediately detects this, restarts the `InventoryManager` with a fresh connection, and the system continues processing the next event in the queue without taking down the website.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div><div class="simple-box-wrapper">
+    <div class="simple-box">
+        <div class="column">
+            <h3>Course Summary</h3><p>This architecture perfectly illustrates why Elixir is uniquely suited for event-driven development.</p>
+            <ul><li><strong>Lightweight Processes</strong> allow us to handle thousands of concurrent WebSocket connections cheaply.</li><li><strong>Message Passing</strong> and mailboxes provide natural buffering, ensuring the `InventoryManager` isn't overwhelmed by the sudden spike in checkouts.</li><li><strong>OTP (GenServer)</strong> gives us a safe, standardized way to manage the critical state of our inventory.</li><li><strong>Supervision</strong> ensures that inevitable failures are isolated and self-healing.</li><li><strong>PubSub</strong> decouples the web requests, the inventory logic, and the user notifications, making the system easy to scale and maintain.</li></ul>
+            <p>By embracing asynchronous processing and the "let it crash" philosophy, you are now equipped to design Elixir systems that are highly responsive, resilient, and ready for real-world scale.</p>
+        </div>
+    </div>
+</div></div></div><div class="links_links__Sf4bR"></div> </div></div><div class="theme_defaultThemeButtonHolder__WNHWY navigator_navigator__VTUZ1" data-continue-button="true" style="display: flex;"><div class="MuiStack-root css-jj2ztu" style="width: 100%;"><button class="MuiButtonBase-root MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeMedium MuiButton-containedSizeMedium MuiButton-colorPrimary MuiButton-fullWidth MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeMedium MuiButton-containedSizeMedium MuiButton-colorPrimary MuiButton-fullWidth css-sb3gt9" tabindex="0" type="button"><span style="z-index: 1;">Continue</span><span class="MuiTouchRipple-root css-w0pj6f"></span></button></div></div>

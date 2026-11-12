@@ -1,0 +1,116 @@
+<div class="card_cardContainer__27V83 "><span style="width:100%"><div class="card-title_cardContainer__V_k3b"><p class="MuiTypography-root MuiTypography-body1 css-abvhp3">Event Design and Operational Considerations</p><div class="MuiBox-root css-tr7fpl"></div></div></span><div class="card_defaultThemeCardContentContainer__LI3Qn card_ltr__Lh05V"><div class="htmlText htmlCourse"><div><div class="simple-box-wrapper">
+  <div class="simple-box">
+    <div class="column">
+      <div class="img-wrapper"><img src="https://cdn.minicoursegenerator.com/production/images/elisha639299141560794038/ai_0c6ed25d-5cb6-4331-a0ef-a9ed9e6d0de7.jpg" class="zoom-enabled" style="cursor: zoom-in;"></div>
+    </div>
+  </div>
+</div>
+
+<div class="simple-box-wrapper">
+    <div class="simple-box">
+        <div class="column">
+            <h2>Designing Clear and Robust Events</h2><p>An event-driven system is only as good as the events that flow through it. Because producers and consumers are decoupled, the event payload itself becomes the API contract between them.</p>
+            <p>Clear event naming and message structure are critical. Events should always be named in the past tense to reflect that they are historical facts (e.g., `invoice_paid`, not `pay_invoice`). The structure should be predictable, often using a map or a struct to clearly label the data.</p><pre data-language="elixir" spellcheck="false"><code class="language-elixir"># Good Event Structure
+            %{
+              event_type: :invoice_paid,
+              event_id: "evt_987654",
+              timestamp: ~U[2023-10-27 10:00:00Z],
+              data: %{invoice_id: "inv_123", amount: 5000}
+            }</code></pre><p>By including metadata like an `event_id` and `timestamp`, handlers can track the flow of events and implement necessary operational safeguards.</p>
+        </div>
+    </div>
+</div><div class="simple-box-wrapper">
+    <div class="simple-box">
+        <div class="column">
+            <h3>Operational Safeguards</h3><p>When you decouple systems, you trade code complexity for operational complexity. Handlers must be designed defensively to survive the realities of asynchronous environments.</p><div class="accordion-wrapper">
+                <div class="accordion-item" data-open="false">
+                    <div class="accordion-header">
+                        <h3>Validation and Unexpected Messages</h3>
+                        <button class="accordion-toggle-button" aria-expanded="false">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <path d="M5 8.49963L12 15.4996L19 8.49963" stroke="#002E47" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="simple-box-wrapper">
+                            <div class="simple-box">
+                                <div class="column">
+                                    <p>Because any process can send a message to any mailbox, handlers must validate input. A GenServer should always include a catch-all `handle_info/2` clause to safely discard unexpected messages. If unhandled, these messages will sit in the mailbox forever, eventually crashing the node due to memory exhaustion.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div><div class="accordion-wrapper">
+                <div class="accordion-item" data-open="false">
+                    <div class="accordion-header">
+                        <h3>Idempotency and Duplication</h3>
+                        <button class="accordion-toggle-button" aria-expanded="false">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <path d="M5 8.49963L12 15.4996L19 8.49963" stroke="#002E47" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="simple-box-wrapper">
+                            <div class="simple-box">
+                                <div class="column">
+                                    <p>Networks retry failed requests. Your handler might receive the same `invoice_paid` event twice. Handlers must be <strong>idempotent</strong>, meaning they can safely process duplicates. You might achieve this by storing the `event_id` in the database and ignoring the event if that ID has already been processed.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div><div class="accordion-wrapper">
+                <div class="accordion-item" data-open="false">
+                    <div class="accordion-header">
+                        <h3>Back Pressure</h3>
+                        <button class="accordion-toggle-button" aria-expanded="false">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <path d="M5 8.49963L12 15.4996L19 8.49963" stroke="#002E47" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="simple-box-wrapper">
+                            <div class="simple-box">
+                                <div class="column">
+                                    <p>If a producer generates events faster than a consumer can process them, the consumer's mailbox will grow infinitely. Implementing <strong>back pressure</strong>—such as using synchronous `calls` when the queue gets too large, forcing the producer to slow down—is essential for system stability.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div><div class="accordion-wrapper">
+                <div class="accordion-item" data-open="false">
+                    <div class="accordion-header">
+                        <h3>Observability</h3>
+                        <button class="accordion-toggle-button" aria-expanded="false">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <path d="M5 8.49963L12 15.4996L19 8.49963" stroke="#002E47" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="simple-box-wrapper">
+                            <div class="simple-box">
+                                <div class="column">
+                                    <p>In a sequential program, a stack trace tells you exactly what failed. In an event-driven system, an event might pass through five different processes. You must implement robust logging and tracing (often using the `event_id`) to monitor the flow and debug failures.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div><div class="simple-box-wrapper">
+    <div class="simple-box">
+        <div class="column">
+            <h3>When NOT to use Event-Driven Design</h3><p>Despite its power, event-driven complexity is not always justified.</p>
+            <p>If a workflow is strictly linear, requires immediate consistency (e.g., checking a bank balance before allowing a withdrawal), and does not involve long-running background tasks, a simple synchronous design is more appropriate. Introducing PubSub and GenServers for a basic CRUD (Create, Read, Update, Delete) application will only make the code harder to read and debug without providing tangible benefits.</p>
+            <p>Always default to synchronous code, and introduce event-driven patterns only when you need responsiveness, decoupling, or scale.</p>
+        </div>
+    </div>
+</div></div></div><div class="links_links__Sf4bR"></div> </div></div><div class="theme_defaultThemeButtonHolder__WNHWY navigator_navigator__VTUZ1" data-continue-button="true" style="display: flex;"><div class="MuiStack-root css-jj2ztu" style="width: 100%;"><button class="MuiButtonBase-root MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeMedium MuiButton-containedSizeMedium MuiButton-colorPrimary MuiButton-fullWidth MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeMedium MuiButton-containedSizeMedium MuiButton-colorPrimary MuiButton-fullWidth css-sb3gt9" tabindex="0" type="button"><span style="z-index: 1;">Continue</span><span class="MuiTouchRipple-root css-w0pj6f"></span></button></div></div>

@@ -1,0 +1,19 @@
+$kind: collection
+name: Learn Anything API
+description: >
+  Contract for the single-user Learn Anything course generator. Read endpoints
+  never include answer_json or quiz explanations; only the attempt submission
+  response returns them. Generation is asynchronous: create a course, then poll
+  /api/topics/{id}/progress until status is ready, partial, or failed.
+variables:
+  - key: baseUrl
+    value: 'http://localhost:3000'
+  - key: topicId
+    value: ''
+    description: Captured by "Create course" or set to an existing course id.
+  - key: lessonId
+    value: ''
+    description: Captured by "Get course" once a lesson is ready.
+  - key: responses
+    value: '{}'
+    description: Built by the "Get lesson" test script for the attempt request.

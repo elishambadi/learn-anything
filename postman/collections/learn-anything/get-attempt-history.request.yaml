@@ -1,0 +1,13 @@
+$kind: http-request
+name: Get attempt history
+method: GET
+url: '{{baseUrl}}/api/topics/{{topicId}}/attempts'
+order: 7000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200 OK', () => pm.response.to.have.status(200));
+      const body = pm.response.json();
+      pm.test('returns attempt history', () => pm.expect(body.attempts).to.be.an('array'));
+examples: './.resources/get-attempt-history.resources/examples'

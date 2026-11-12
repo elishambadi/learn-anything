@@ -1,0 +1,19 @@
+$kind: http-request
+name: Get progress
+method: GET
+url: '{{baseUrl}}/api/topics/{{topicId}}/progress'
+order: 4000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200 OK', () => pm.response.to.have.status(200));
+      const body = pm.response.json();
+      pm.test('progress has a known stage', () => {
+        pm.expect(['queued','analyze','decompose','outline','lessons','done'])
+          .to.include(body.stage);
+      });
+      pm.test('lesson counts are numeric', () => {
+        pm.expect(body.lessons).to.have.all.keys('done', 'failed', 'total');
+      });
+examples: './.resources/get-progress.resources/examples'

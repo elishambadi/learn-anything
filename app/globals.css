@@ -1,0 +1,248 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+  --app-bg: #0b0d10;
+  --code-bg: #0d0d10;
+  --prose-body: #d4d4d8;
+  --prose-heading: #f4f4f5;
+  --prose-border: #27272a;
+  --prose-code-bg: #18181b;
+  --prose-code-border: #27272a;
+  --prose-code-text: #e4e4e7;
+  --prose-muted: #a1a1aa;
+  --prose-pre-bg: #111114;
+  --prose-table-head: #18181b;
+  --prose-accent: #a78bfa;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --app-bg: #fafafa;
+  --code-bg: #f4f4f5;
+  --prose-body: #3f3f46;
+  --prose-heading: #18181b;
+  --prose-border: #e4e4e7;
+  --prose-code-bg: #f4f4f5;
+  --prose-code-border: #e4e4e7;
+  --prose-code-text: #27272a;
+  --prose-muted: #71717a;
+  --prose-pre-bg: #f4f4f5;
+  --prose-table-head: #f4f4f5;
+  --prose-accent: #6d28d9;
+
+  --color-zinc-950: #ffffff;
+  --color-zinc-900: #f4f4f5;
+  --color-zinc-800: #e4e4e7;
+  --color-zinc-700: #d4d4d8;
+  --color-zinc-600: #71717a;
+  --color-zinc-500: #52525b;
+  --color-zinc-400: #3f3f46;
+  --color-zinc-300: #27272a;
+  --color-zinc-200: #18181b;
+  --color-zinc-100: #09090b;
+
+  --color-violet-950: #f5f3ff;
+  --color-violet-900: #ede9fe;
+  --color-violet-800: #ddd6fe;
+  --color-violet-700: #5b21b6;
+  --color-violet-600: #7c3aed;
+  --color-violet-500: #6d28d9;
+  --color-violet-400: #6d28d9;
+  --color-violet-300: #5b21b6;
+  --color-violet-200: #4c1d95;
+  --color-violet-100: #3b0764;
+
+  --color-emerald-950: #ecfdf5;
+  --color-emerald-900: #d1fae5;
+  --color-emerald-800: #a7f3d0;
+  --color-emerald-700: #6ee7b7;
+  --color-emerald-600: #059669;
+  --color-emerald-500: #10b981;
+  --color-emerald-400: #047857;
+  --color-emerald-300: #065f46;
+  --color-emerald-200: #064e3b;
+  --color-emerald-100: #022c22;
+
+  --color-amber-950: #fffbeb;
+  --color-amber-900: #fef3c7;
+  --color-amber-800: #fde68a;
+  --color-amber-700: #fcd34d;
+  --color-amber-600: #d97706;
+  --color-amber-500: #f59e0b;
+  --color-amber-400: #b45309;
+  --color-amber-300: #92400e;
+  --color-amber-200: #78350f;
+  --color-amber-100: #451a03;
+
+  --color-red-950: #fef2f2;
+  --color-red-900: #fee2e2;
+  --color-red-800: #fecaca;
+  --color-red-700: #fca5a5;
+  --color-red-600: #dc2626;
+  --color-red-500: #b91c1c;
+  --color-red-400: #b91c1c;
+  --color-red-300: #991b1b;
+  --color-red-200: #7f1d1d;
+  --color-red-100: #450a0a;
+
+  --color-sky-950: #f0f9ff;
+  --color-sky-900: #e0f2fe;
+  --color-sky-800: #bae6fd;
+  --color-sky-700: #7dd3fc;
+  --color-sky-600: #0284c7;
+  --color-sky-500: #0ea5e9;
+  --color-sky-400: #0369a1;
+  --color-sky-300: #075985;
+  --color-sky-200: #0c4a6e;
+  --color-sky-100: #082f49;
+}
+
+html,
+body {
+  background: var(--app-bg);
+}
+
+body {
+  font-family:
+    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
+
+.app-header {
+  background: color-mix(in srgb, var(--app-bg) 85%, transparent);
+}
+
+.lesson-hero-overlay {
+  background: linear-gradient(
+    to top,
+    var(--app-bg) 0%,
+    color-mix(in srgb, var(--app-bg) 80%, transparent) 55%,
+    color-mix(in srgb, var(--app-bg) 25%, transparent) 100%
+  );
+}
+
+::selection {
+  background: rgba(139, 92, 246, 0.35);
+}
+
+.lesson-prose {
+  color: var(--prose-body);
+  line-height: 1.8;
+  font-size: 1.02rem;
+}
+
+.lesson-prose p {
+  margin: 1rem 0;
+}
+
+.lesson-prose h1,
+.lesson-prose h2,
+.lesson-prose h3,
+.lesson-prose h4 {
+  color: var(--prose-heading);
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.lesson-prose h2 {
+  margin: 2.25rem 0 0.9rem;
+  font-size: 1.4rem;
+  letter-spacing: -0.015em;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--prose-border);
+}
+
+.lesson-prose h3 {
+  margin: 1.75rem 0 0.6rem;
+  font-size: 1.15rem;
+}
+
+.lesson-prose ul,
+.lesson-prose ol {
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+}
+
+.lesson-prose ul {
+  list-style: disc;
+}
+
+.lesson-prose ol {
+  list-style: decimal;
+}
+
+.lesson-prose li {
+  margin: 0.35rem 0;
+}
+
+.lesson-prose li::marker {
+  color: var(--prose-muted);
+}
+
+.lesson-prose strong {
+  color: var(--prose-heading);
+  font-weight: 600;
+}
+
+.lesson-prose a {
+  color: var(--prose-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.lesson-prose code {
+  background: var(--prose-code-bg);
+  border: 1px solid var(--prose-code-border);
+  border-radius: 0.35rem;
+  padding: 0.1rem 0.35rem;
+  font-size: 0.88em;
+  color: var(--prose-code-text);
+}
+
+.lesson-prose pre {
+  background: var(--prose-pre-bg);
+  border: 1px solid var(--prose-border);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 1.25rem 0;
+}
+
+.lesson-prose pre code {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font-size: 0.9rem;
+}
+
+.lesson-prose blockquote {
+  border-left: 3px solid #6d28d9;
+  padding-left: 1rem;
+  color: var(--prose-muted);
+  margin: 1.25rem 0;
+}
+
+.lesson-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.25rem 0;
+  font-size: 0.95rem;
+}
+
+.lesson-prose th,
+.lesson-prose td {
+  border: 1px solid var(--prose-border);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+.lesson-prose th {
+  background: var(--prose-table-head);
+  color: var(--prose-code-text);
+}
+
+.lesson-prose hr {
+  border-color: var(--prose-border);
+  margin: 2rem 0;
+}

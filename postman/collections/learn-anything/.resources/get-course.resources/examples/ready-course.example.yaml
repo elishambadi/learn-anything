@@ -1,0 +1,52 @@
+$kind: http-example
+name: Ready course
+request:
+  url: '{{baseUrl}}/api/topics/{{topicId}}'
+  method: GET
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    - key: Content-Type
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "topic": {
+          "id": "0f5b7c1e-8a2d-4f5e-9b1a-3c6d7e8f9a0b",
+          "prompt": "Photosynthesis",
+          "mode": "normal",
+          "status": "ready",
+          "error": null,
+          "analysis": {
+            "summary": "Photosynthesis converts light energy into chemical energy, producing glucose and oxygen.",
+            "audience": "Curious adults with no biology background.",
+            "objectives": [
+              "Explain what photosynthesis produces",
+              "Describe the light reactions",
+              "Describe the Calvin cycle"
+            ],
+            "concepts": [],
+            "suggested_lesson_count": 5
+          },
+          "createdAt": "2026-11-11T09:00:00.000Z",
+          "updatedAt": "2026-11-11T09:01:20.000Z"
+        },
+        "subtopics": [],
+        "lessons": [
+          {
+            "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+            "subtopicId": null,
+            "position": 0,
+            "title": "Capturing light",
+            "objectives": [
+              "Explain how chlorophyll absorbs photons",
+              "Describe how water splitting releases oxygen"
+            ],
+            "hasSequence": true,
+            "status": "ready",
+            "error": null
+          }
+        ]
+      }

@@ -1,0 +1,34 @@
+$kind: http-example
+name: Graded attempt
+request:
+  url: '{{baseUrl}}/api/lessons/{{lessonId}}/attempts'
+  method: POST
+response:
+  statusCode: 201
+  statusText: Created
+  headers:
+    - key: Content-Type
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "attemptId": "c3d4e5f6-a7b8-4c9d-8e0f-1a2b3c4d5e6f",
+        "lessonId": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+        "score": 2,
+        "total": 2,
+        "results": [
+          {
+            "questionId": "q1",
+            "isCorrect": true,
+            "correctAnswer": { "optionId": "a" },
+            "explanation": "Chlorophyll captures light energy from the sun and converts it into chemical energy."
+          },
+          {
+            "questionId": "q2",
+            "isCorrect": false,
+            "correctAnswer": { "optionIds": ["a", "b"] },
+            "explanation": "The light reactions produce ATP and NADPH for the Calvin cycle."
+          }
+        ]
+      }

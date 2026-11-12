@@ -1,0 +1,950 @@
+openapi: 3.1.0
+info:
+  title: Learn Anything API
+  version: 1.0.0
+  description: |
+    Single-user, local-only course generation API. A course is produced by an
+    in-process pipeline: analyze → (decompose) → outline → lesson + quiz.
+
+    Security boundary: read endpoints never return `answer_json` or quiz
+    `explanation`. They are returned only in the attempt submission response.
+
+    Generation is asynchronous. `POST /api/topics` returns immediately; poll
+    `GET /api/topics/{id}/progress` until `status` is `ready`, `partial`, or
+    `failed`.
+servers:
+  - url: http://localhost:3000
+    description: Local Next.js server
+security: []
+tags:
+  - name: Courses
+  - name: Lessons
+  - name: Attempts
+
+paths:
+  /api/topics:
+    get:
+      tags: [Courses]
+      summary: List courses
+      operationId: listTopics
+      responses:
+        "200":
+          description: Courses, newest first, with aggregate counts.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [topics]
+                properties:
+                  topics:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/TopicSummary"
+    post:
+      tags: [Courses]
+      summary: Create a course and enqueue generation
+      operationId: createTopic
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTopicRequest"
+      responses:
+        "201":
+          description: Course created and queued.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id]
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "503":
+          $ref: "#/components/responses/NotConfigured"
+
+  /api/topics/{id}:
+    parameters:
+      - $ref: "#/components/parameters/TopicId"
+    get:
+      tags: [Courses]
+      summary: Get course detail with lesson stubs
+      operationId: getTopic
+      responses:
+        "200":
+          description: Course detail. Lesson stubs contain no content or questions.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TopicDetail"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [Courses]
+      summary: Delete a course and everything under it
+      operationId: deleteTopic
+      responses:
+        "200":
+          description: Deleted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok]
+                properties:
+                  ok:
+                    type: boolean
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/topics/{id}/progress:
+    parameters:
+      - $ref: "#/components/parameters/TopicId"
+    get:
+      tags: [Courses]
+      summary: Poll generation progress
+      operationId: getTopicProgress
+      responses:
+        "200":
+          description: Current stage and per-lesson states.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Progress"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/topics/{id}/retry:
+    parameters:
+      - $ref: "#/components/parameters/TopicId"
+    post:
+      tags: [Courses]
+      summary: Resume unfinished stages and failed lessons
+      description: |
+        Ready lessons are never regenerated. Missing analysis, subtopics,
+        outlines, and failed lessons are resumed. Safe to call repeatedly.
+      operationId: retryTopic
+      responses:
+        "200":
+          description: Work queued, already running, or already ready.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok, status]
+                properties:
+                  ok:
+                    type: boolean
+                  status:
+                    type: string
+                    enum: [queued, generating, ready]
+                  running:
+                    type: boolean
+                  alreadyDone:
+                    type: boolean
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/NotConfigured"
+
+  /api/topics/{id}/attempts:
+    parameters:
+      - $ref: "#/components/parameters/TopicId"
+    get:
+      tags: [Attempts]
+      summary: List attempts for a course
+      operationId: listTopicAttempts
+      responses:
+        "200":
+          description: Attempt history, newest first.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [attempts]
+                properties:
+                  attempts:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/AttemptHistoryItem"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/lessons/{id}:
+    parameters:
+      - $ref: "#/components/parameters/LessonId"
+    get:
+      tags: [Lessons]
+      summary: Read a lesson and its public quiz
+      description: |
+        Returns markdown, objectives, and questions with options. Never returns
+        the answer or explanation.
+      operationId: getLesson
+      responses:
+        "200":
+          description: Public lesson payload.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LessonRead"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: The lesson has not generated content yet.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/lessons/{id}/attempts:
+    parameters:
+      - $ref: "#/components/parameters/LessonId"
+    post:
+      tags: [Attempts]
+      summary: Submit answers and grade them server-side
+      description: |
+        Every question in the lesson must be answered. Responses are graded by
+        type: exact option id, exact set for multi, exact sequence for order.
+        The response is the only place correctAnswer and explanation appear.
+      operationId: submitAttempt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AttemptRequest"
+            examples:
+              allTypes:
+                summary: One response of each question type
+                value:
+                  responses:
+                    q1: "a"
+                    q2: true
+                    q3: ["a", "c"]
+                    q4: ["c", "a", "b"]
+      responses:
+        "201":
+          description: Attempt stored and graded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AttemptResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: Lesson is not ready.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+components:
+  parameters:
+    TopicId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    LessonId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    BadRequest:
+      description: Invalid request body or unanswered/unknown questions.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: Resource not found.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotConfigured:
+      description: ANTHROPIC_API_KEY is not configured.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+
+    CreateTopicRequest:
+      type: object
+      required: [prompt, mode]
+      properties:
+        prompt:
+          type: string
+          minLength: 3
+          maxLength: 500
+          examples: ["Photosynthesis"]
+        mode:
+          type: string
+          enum: [normal, deep]
+
+    TopicMode:
+      type: string
+      enum: [normal, deep]
+
+    TopicStatus:
+      type: string
+      enum: [queued, generating, ready, partial, failed]
+
+    LessonStatus:
+      type: string
+      enum: [pending, generating, ready, failed]
+
+    QuestionType:
+      type: string
+      enum: [true_false, radio, multi, order]
+
+    Difficulty:
+      type: string
+      enum: [easy, medium, hard]
+
+    Analysis:
+      type: object
+      required: [summary, audience, objectives, concepts, suggested_lesson_count]
+      properties:
+        summary:
+          type: string
+        audience:
+          type: string
+        objectives:
+          type: array
+          minItems: 3
+          maxItems: 6
+          items:
+            type: string
+        concepts:
+          type: array
+          minItems: 0
+          maxItems: 6
+          items:
+            $ref: "#/components/schemas/CoreConcept"
+        suggested_lesson_count:
+          type: integer
+          minimum: 4
+          maximum: 6
+
+    Topic:
+      type: object
+      required: [id, prompt, mode, status, error, analysis, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        prompt:
+          type: string
+        mode:
+          $ref: "#/components/schemas/TopicMode"
+        status:
+          $ref: "#/components/schemas/TopicStatus"
+        error:
+          type: [string, "null"]
+        analysis:
+          oneOf:
+            - $ref: "#/components/schemas/Analysis"
+            - type: "null"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    TopicSummary:
+      type: object
+      required:
+        - id
+        - prompt
+        - mode
+        - status
+        - lessonCount
+        - readyCount
+        - attemptCount
+      properties:
+        id:
+          type: string
+          format: uuid
+        prompt:
+          type: string
+        mode:
+          $ref: "#/components/schemas/TopicMode"
+        status:
+          $ref: "#/components/schemas/TopicStatus"
+        analysisJson:
+          type: [string, "null"]
+          description: Raw JSON string; read `analysis` from the detail endpoint for the parsed shape.
+        error:
+          type: [string, "null"]
+        heartbeatAt:
+          type: [string, "null"]
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        lessonCount:
+          type: integer
+        readyCount:
+          type: integer
+        attemptCount:
+          type: integer
+        bestScore:
+          type: [integer, "null"]
+        scoreTotal:
+          type: [integer, "null"]
+
+    Subtopic:
+      type: object
+      required: [id, position, title, summary, objectives, status, error]
+      properties:
+        id:
+          type: string
+          format: uuid
+        position:
+          type: integer
+        title:
+          type: string
+        summary:
+          type: string
+        objectives:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+          enum: [pending, generating, ready, failed]
+        error:
+          type: [string, "null"]
+
+    LessonStub:
+      type: object
+      required: [id, subtopicId, position, title, objectives, hasSequence, status, error]
+      properties:
+        id:
+          type: string
+          format: uuid
+        subtopicId:
+          type: [string, "null"]
+          format: uuid
+        position:
+          type: integer
+        title:
+          type: string
+        objectives:
+          type: array
+          items:
+            type: string
+        hasSequence:
+          type: boolean
+        status:
+          $ref: "#/components/schemas/LessonStatus"
+        error:
+          type: [string, "null"]
+
+    TopicDetail:
+      type: object
+      required: [topic, subtopics, lessons]
+      properties:
+        topic:
+          $ref: "#/components/schemas/Topic"
+        subtopics:
+          type: array
+          items:
+            $ref: "#/components/schemas/Subtopic"
+        lessons:
+          type: array
+          items:
+            $ref: "#/components/schemas/LessonStub"
+
+    Progress:
+      type: object
+      required: [id, status, stage, error, lessons, units, lessonStates]
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          $ref: "#/components/schemas/TopicStatus"
+        stage:
+          type: string
+          enum: [queued, analyze, decompose, outline, lessons, done]
+        error:
+          type: [string, "null"]
+        lessons:
+          type: object
+          required: [done, failed, total]
+          properties:
+            done:
+              type: integer
+            failed:
+              type: integer
+            total:
+              type: integer
+        units:
+          type: array
+          items:
+            type: object
+            required: [id, title, status, done, total]
+            properties:
+              id:
+                type: [string, "null"]
+                format: uuid
+              title:
+                type: string
+              status:
+                type: string
+              done:
+                type: integer
+              total:
+                type: integer
+        lessonStates:
+          type: array
+          items:
+            type: object
+            required: [id, title, status, subtopicId]
+            properties:
+              id:
+                type: string
+                format: uuid
+              title:
+                type: string
+              status:
+                $ref: "#/components/schemas/LessonStatus"
+              subtopicId:
+                type: [string, "null"]
+                format: uuid
+
+    Option:
+      type: object
+      required: [id, text]
+      properties:
+        id:
+          type: string
+          description: Stored id. For order questions this is the scrambled display order.
+        text:
+          type: string
+
+    PublicQuestion:
+      type: object
+      description: A question as seen before submission. No answer or explanation.
+      required: [id, position, type, prompt, options, difficulty, placement]
+      properties:
+        id:
+          type: string
+          format: uuid
+        position:
+          type: integer
+        type:
+          $ref: "#/components/schemas/QuestionType"
+        prompt:
+          type: string
+        options:
+          type: array
+          items:
+            $ref: "#/components/schemas/Option"
+        difficulty:
+          $ref: "#/components/schemas/Difficulty"
+        placement:
+          type: string
+          enum: [inline, final]
+          description: Inline checks appear during the lesson; final questions appear in the final quiz.
+
+    CoreConcept:
+      type: object
+      required: [id, title, description, icon]
+      properties:
+        id:
+          type: string
+          pattern: '^[a-z0-9-]+$'
+        title:
+          type: string
+        description:
+          type: string
+        icon:
+          type: string
+          enum:
+            - lightbulb
+            - layers
+            - workflow
+            - shield
+            - zap
+            - target
+            - book
+            - database
+            - clock
+            - chart
+            - box
+            - git-branch
+            - globe
+            - cpu
+            - check
+
+    Comparison:
+      type: object
+      required: [title, columns, rows]
+      properties:
+        title:
+          type: string
+        columns:
+          type: array
+          minItems: 2
+          maxItems: 3
+          items:
+            type: string
+        rows:
+          type: array
+          minItems: 2
+          maxItems: 4
+          items:
+            type: array
+            items:
+              type: string
+
+    SectionVisual:
+      type: object
+      required: [kind]
+      properties:
+        kind:
+          type: string
+          enum:
+            - table
+            - steps
+            - roles
+            - accordion
+            - tabs
+            - code
+            - bullets
+            - none
+        columns:
+          type: array
+          description: Table columns when kind is "table".
+          minItems: 2
+          maxItems: 3
+          items:
+            type: string
+        rows:
+          type: array
+          description: Table rows when kind is "table".
+          minItems: 2
+          maxItems: 4
+          items:
+            type: array
+            items:
+              type: string
+        items:
+          type: array
+          description: Cards, steps, tabs, or bullets when the kind uses them.
+          items:
+            oneOf:
+              - type: string
+              - type: object
+                required: [title, text]
+                properties:
+                  title:
+                    type: string
+                  text:
+                    type: string
+        language:
+          type: string
+          description: Language tag when kind is "code".
+        code:
+          type: string
+          description: Snippet when kind is "code".
+
+    LessonSection:
+      type: object
+      required: [heading, body_markdown, visual]
+      properties:
+        heading:
+          type: string
+        body_markdown:
+          type: string
+        visual:
+          $ref: "#/components/schemas/SectionVisual"
+
+    LessonClosing:
+      type: object
+      required: [kind, heading, body_markdown]
+      properties:
+        kind:
+          type: string
+          enum: [summary, boundary]
+        heading:
+          type: string
+        body_markdown:
+          type: string
+
+    RealWorld:
+      type: object
+      required: [title, description, link, code, try_this]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        link:
+          oneOf:
+            - type: object
+              required: [label, url]
+              properties:
+                label:
+                  type: string
+                url:
+                  type: string
+            - type: "null"
+        code:
+          oneOf:
+            - type: object
+              required: [language, code]
+              properties:
+                language:
+                  type: string
+                code:
+                  type: string
+            - type: "null"
+        try_this:
+          type: string
+
+    LessonRead:
+      type: object
+      required:
+        - id
+        - topicId
+        - subtopicId
+        - position
+        - title
+        - objectives
+        - hasSequence
+        - promise
+        - heroQuery
+        - coreConcepts
+        - courseConcepts
+        - sections
+        - closing
+        - comparison
+        - realWorld
+        - contentMarkdown
+        - status
+        - questions
+        - topic
+        - nextLesson
+        - attemptSummary
+      properties:
+        id:
+          type: string
+          format: uuid
+        topicId:
+          type: string
+          format: uuid
+        subtopicId:
+          type: [string, "null"]
+          format: uuid
+        position:
+          type: integer
+        title:
+          type: string
+        objectives:
+          type: array
+          items:
+            type: string
+        hasSequence:
+          type: boolean
+        promise:
+          type: string
+        heroQuery:
+          type: [string, "null"]
+        coreConcepts:
+          type: array
+          description: The 1-3 course concepts this lesson focuses on.
+          items:
+            $ref: "#/components/schemas/CoreConcept"
+        courseConcepts:
+          type: array
+          description: All core concepts for the course, the spine every lesson builds on.
+          items:
+            $ref: "#/components/schemas/CoreConcept"
+        sections:
+          type: array
+          description: Two or three teaching sections, each with one visual.
+          minItems: 2
+          maxItems: 3
+          items:
+            $ref: "#/components/schemas/LessonSection"
+        closing:
+          oneOf:
+            - $ref: "#/components/schemas/LessonClosing"
+            - type: "null"
+        comparison:
+          oneOf:
+            - $ref: "#/components/schemas/Comparison"
+            - type: "null"
+          description: Legacy field for lessons generated before structured sections.
+        realWorld:
+          oneOf:
+            - $ref: "#/components/schemas/RealWorld"
+            - type: "null"
+        contentMarkdown:
+          type: string
+        status:
+          $ref: "#/components/schemas/LessonStatus"
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/PublicQuestion"
+        topic:
+          type: object
+          required: [id, prompt, mode]
+          properties:
+            id:
+              type: string
+              format: uuid
+            prompt:
+              type: string
+            mode:
+              $ref: "#/components/schemas/TopicMode"
+        nextLesson:
+          oneOf:
+            - type: object
+              required: [id, title]
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                title:
+                  type: string
+            - type: "null"
+        attemptSummary:
+          oneOf:
+            - type: object
+              required: [lessonId, attempts, bestScore, total, lastSubmittedAt]
+              properties:
+                lessonId:
+                  type: string
+                  format: uuid
+                attempts:
+                  type: integer
+                bestScore:
+                  type: integer
+                total:
+                  type: integer
+                lastSubmittedAt:
+                  type: string
+                  format: date-time
+            - type: "null"
+
+    AttemptRequest:
+      type: object
+      description: |
+        Keys are question ids from `GET /api/lessons/{id}`. Values by type:
+        true_false → boolean, radio → option id string, multi → array of option
+        ids, order → array of option ids in the learner's order.
+      required: [responses]
+      properties:
+        responses:
+          type: object
+          additionalProperties: true
+
+    AttemptResult:
+      type: object
+      required: [questionId, isCorrect, correctAnswer, explanation]
+      properties:
+        questionId:
+          type: string
+          format: uuid
+        isCorrect:
+          type: boolean
+        correctAnswer:
+          description: |
+            Canonical answer: {value} for true_false, {optionId} for radio,
+            {optionIds} for multi, {itemIds} for order.
+          oneOf:
+            - type: object
+              required: [value]
+              properties:
+                value:
+                  type: boolean
+            - type: object
+              required: [optionId]
+              properties:
+                optionId:
+                  type: string
+            - type: object
+              required: [optionIds]
+              properties:
+                optionIds:
+                  type: array
+                  items:
+                    type: string
+            - type: object
+              required: [itemIds]
+              properties:
+                itemIds:
+                  type: array
+                  items:
+                    type: string
+        explanation:
+          type: string
+
+    AttemptResponse:
+      type: object
+      required: [attemptId, lessonId, score, total, results]
+      properties:
+        attemptId:
+          type: string
+          format: uuid
+        lessonId:
+          type: string
+          format: uuid
+        score:
+          type: integer
+        total:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/AttemptResult"
+
+    AttemptHistoryItem:
+      type: object
+      required: [id, lessonId, lessonTitle, score, total, submittedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        lessonId:
+          type: string
+          format: uuid
+        lessonTitle:
+          type: string
+        score:
+          type: integer
+        total:
+          type: integer
+        submittedAt:
+          type: string
+          format: date-time
